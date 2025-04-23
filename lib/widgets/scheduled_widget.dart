@@ -1,4 +1,5 @@
 import 'package:fitness_dashboard_ui/data/schedule_task_data.dart';
+import 'package:fitness_dashboard_ui/theme/maternity_theme.dart';
 import 'package:fitness_dashboard_ui/widgets/custom_card_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -12,47 +13,63 @@ class Scheduled extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Scheduled",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        Text(
+          "Upcoming Appointments",
+          style: MaternityTheme.headingStyle,
         ),
-        const SizedBox(height: 12),
-        for (var index = 0; index < data.scheduled.length; index++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5),
-            child: CustomCard(
-              color: Colors.black,
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
+        const SizedBox(height: 16),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: data.scheduled.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: CustomCard(
+                color: MaternityTheme.white,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        color: MaternityTheme.primaryPink,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             data.scheduled[index].title,
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.w500),
+                            style: MaternityTheme.headingStyle.copyWith(fontSize: 16),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            data.scheduled[index].date,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 16,
+                                color: MaternityTheme.textLight,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                data.scheduled[index].date,
+                                style: MaternityTheme.subheadingStyle,
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      const Icon(Icons.more),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
+        ),
       ],
     );
   }

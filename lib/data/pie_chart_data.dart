@@ -1,38 +1,19 @@
-import 'package:fitness_dashboard_ui/const/constant.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class ChartData {
-  final paiChartSelectionDatas = [
+class GaugeChartData {
+  final List<PieChartSectionData> sections = [
     PieChartSectionData(
-      color: primaryColor,
-      value: 25,
+      color: Colors.green, // Represents SpO2 level
+      value: 40,
       showTitle: false,
-      radius: 25,
+      radius: 40,
     ),
     PieChartSectionData(
-      color: const Color(0xFF26E5FF),
-      value: 20,
+      color: Colors.grey.withOpacity(0.3), // Remaining part
+      value: 60,
       showTitle: false,
-      radius: 22,
-    ),
-    PieChartSectionData(
-      color: const Color(0xFFFFCF26),
-      value: 10,
-      showTitle: false,
-      radius: 19,
-    ),
-    PieChartSectionData(
-      color: const Color(0xFFEE2727),
-      value: 15,
-      showTitle: false,
-      radius: 16,
-    ),
-    PieChartSectionData(
-      color: primaryColor.withOpacity(0.1),
-      value: 25,
-      showTitle: false,
-      radius: 13,
+      radius: 40,
     ),
   ];
 }

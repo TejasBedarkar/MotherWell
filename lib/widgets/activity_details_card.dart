@@ -1,4 +1,5 @@
 import 'package:fitness_dashboard_ui/data/health_details.dart';
+import 'package:fitness_dashboard_ui/theme/maternity_theme.dart';
 import 'package:fitness_dashboard_ui/util/responsive.dart';
 import 'package:fitness_dashboard_ui/widgets/custom_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -13,40 +14,39 @@ class ActivityDetailsCard extends StatelessWidget {
     return GridView.builder(
       itemCount: healthDetails.healthData.length,
       shrinkWrap: true,
-      physics: const ScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: Responsive.isMobile(context) ? 2 : 4,
-        crossAxisSpacing: Responsive.isMobile(context) ? 12 : 15,
-        mainAxisSpacing: 12.0,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 1.2,
       ),
       itemBuilder: (context, index) => CustomCard(
+        color: MaternityTheme.lightPink,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              healthDetails.healthData[index].icon,
-              width: 30,
-              height: 30,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 15, bottom: 4),
-              child: Text(
-                healthDetails.healthData[index].value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: MaternityTheme.white,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset(
+                healthDetails.healthData[index].icon,
+                width: 24,
+                height: 24,
               ),
             ),
+            const SizedBox(height: 12),
+            Text(
+              healthDetails.healthData[index].value,
+              style: MaternityTheme.headingStyle,
+            ),
+            const SizedBox(height: 4),
             Text(
               healthDetails.healthData[index].title,
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.grey,
-                fontWeight: FontWeight.normal,
-              ),
+              style: MaternityTheme.subheadingStyle,
             ),
           ],
         ),

@@ -1,42 +1,96 @@
-import 'package:fitness_dashboard_ui/const/constant.dart';
-import 'package:fitness_dashboard_ui/data/pie_chart_data.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fitness_dashboard_ui/theme/maternity_theme.dart';
 
-class Chart extends StatelessWidget {
-  const Chart({super.key});
+class SemiCircleGaugeChart extends StatefulWidget {
+  const SemiCircleGaugeChart({super.key});
+
+  @override
+  State<SemiCircleGaugeChart> createState() => _SemiCircleGaugeChartState();
+}
+
+class _SemiCircleGaugeChartState extends State<SemiCircleGaugeChart>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 48).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    )..addListener(() {
+        setState(() {});
+      });
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final pieChartData = ChartData();
+    double percentage = _animation.value;
+    double filledValue = (percentage / 100) * 180;
+    double emptyValue = 180 - filledValue;
 
-    return SizedBox(
-      height: 200,
+    return Container(
+      height: 230,
+      width: 250,
+      decoration: BoxDecoration(
+        color: MaternityTheme.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Stack(
+        alignment: Alignment.center,
         children: [
-          PieChart(
-            PieChartData(
-              sectionsSpace: 0,
-              centerSpaceRadius: 70,
-              startDegreeOffset: -90,
-              sections: pieChartData.paiChartSelectionDatas,
+          ClipRect(
+            child: Align(
+              alignment: Alignment.topCenter,
+              heightFactor: 0.5,
+              child: PieChart(
+                PieChartData(
+                  sectionsSpace: 0,
+                  centerSpaceRadius: 65,
+                  startDegreeOffset: 180,
+                  sections: [
+                    PieChartSectionData(
+                      color: MaternityTheme.primaryPink,
+                      value: filledValue,
+                      showTitle: false,
+                      radius: 45,
+                    ),
+                    PieChartSectionData(
+                      color: MaternityTheme.lightPink,
+                      value: emptyValue,
+                      showTitle: false,
+                      radius: 45,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-          Positioned.fill(
+          Positioned(
+            bottom: 10,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: defaultPadding),
                 Text(
-                  "70%",
-                  style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        height: 0.5,
-                      ),
+                  "${percentage.toStringAsFixed(0)}%",
+                  style: MaternityTheme.headingStyle.copyWith(fontSize: 24),
                 ),
-                const SizedBox(height: 8),
-                const Text("of 100%")
+                const SizedBox(height: 4),
+                Text(
+                  "Oxygen Level",
+                  style: MaternityTheme.subheadingStyle,
+                ),
               ],
             ),
           ),

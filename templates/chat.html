@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MotherWell Bot</title>
+    <style>
+        :root {
+            --primary-pink: #ffd6e7;
+            --accent-pink: #ff85b3;
+            --dark-pink: #e75480;
+            --white: #ffffff;
+            --light-gray: #f8f9fa;
+            --dark-gray: #495057;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--white);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            color: var(--dark-gray);
+            overflow: hidden;
+        }
+
+        .chat-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--accent-pink), var(--dark-pink));
+            color: var(--white);
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .chat-body {
+            flex: 1;
+            background-color: var(--white);
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--primary-pink);
+            color: var(--dark-gray);
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--light-gray);
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-footer {
+            display: flex;
+            background-color: var(--white);
+            padding: 12px;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+        }
+
+        #userInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        #sendButton {
+            background-color: var(--accent-pink);
+            color: var(--white);
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #sendButton:hover {
+            background-color: var(--dark-pink);
+        }
+
+        .status-indicator {
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 5px;
+            color: #777;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 8px 15px;
+            background-color: var(--light-gray);
+            border-radius: 18px;
+            margin-bottom: 10px;
+            color: var(--dark-gray);
+            font-style: italic;
+        }
+
+        .error-message {
+            color: #d9534f;
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #f9f2f2;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-wrapper">
+        <div class="chat-header">
+            MotherWell Pregnancy Assistant
+        </div>
+        <div class="chat-body" id="chatBody">
+            <div class="message bot-message">
+                Hello! I'm MotherWell Bot. How can I help with your pregnancy questions today?
+            </div>
+            <div class="typing-indicator" id="typingIndicator">Bot is typing...</div>
+        </div>
+        <div class="error-message" id="errorMessage">
+            Connection lost. Trying to reconnect...
+        </div>
+        <div class="status-indicator" id="statusIndicator"></div>
+        <div class="chat-footer">
+            <input type="text" id="userInput" placeholder="Type your question...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatBody = document.getElementById('chatBody');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const statusIndicator = document.getElementById('statusIndicator');
+            const typingIndicator = document.getElementById('typingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            let clientId = localStorage.getItem('motherwellClientId') || '';
+            let isConnected = false;
+            let socket;
+            
+            function initializeSocket() {
+                // Connect to the Socket.IO server
+                socket = io({
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    reconnectionAttempts: Infinity
+                });
+                
+                // Connection events
+                socket.on('connect', function() {
+                    console.log('Connected to server');
+                    isConnected = true;
+                    errorMessage.style.display = 'none';
+                    statusIndicator.textContent = 'Connected';
+                    setTimeout(() => { statusIndicator.textContent = ''; }, 3000);
+                });
+                
+                socket.on('connected', function(data) {
+                    clientId = data.client_id;
+                    localStorage.setItem('motherwellClientId', clientId);
+                });
+                
+                socket.on('disconnect', function() {
+                    console.log('Disconnected from server');
+                    isConnected = false;
+                    errorMessage.style.display = 'block';
+                    statusIndicator.textContent = 'Disconnected';
+                });
+                
+                socket.on('reconnect', function() {
+                    console.log('Reconnected to server');
+                    errorMessage.style.display = 'none';
+                    statusIndicator.textContent = 'Reconnected';
+                    setTimeout(() => { statusIndicator.textContent = ''; }, 3000);
+                });
+                
+                // Message events
+                socket.on('message', function(msg) {
+                    typingIndicator.style.display = 'none';
+                    
+                    const botMessage = document.createElement('div');
+                    botMessage.className = 'message bot-message';
+                    botMessage.textContent = msg;
+                    chatBody.appendChild(botMessage);
+                    scrollToBottom();
+                });
+            }
+            
+            function sendMessage() {
+                const message = userInput.value.trim();
+                if (!message) return;
+                
+                if (!isConnected) {
+                    statusIndicator.textContent = 'Not connected to server';
+                    setTimeout(() => { statusIndicator.textContent = ''; }, 3000);
+                    return;
+                }
+                
+                // Add user message to chat
+                const userMessage = document.createElement('div');
+                userMessage.className = 'message user-message';
+                userMessage.textContent = message;
+                chatBody.appendChild(userMessage);
+                
+                // Show typing indicator
+                typingIndicator.style.display = 'block';
+                scrollToBottom();
+                
+                // Send to server
+                socket.emit('message', message);
+                
+                // Clear input and focus
+                userInput.value = '';
+                userInput.focus();
+            }
+            
+            function scrollToBottom() {
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+            
+            // Event Listeners
+            sendButton.addEventListener('click', sendMessage);
+            
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+            
+            // Fix for mobile viewport height issues with virtual keyboard
+            const viewportHeight = () => {
+                let vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            
+            window.addEventListener('resize', viewportHeight);
+            viewportHeight();
+            
+            // Initialize connection
+            initializeSocket();
+        });
+    </script>
+</body>
+</html>
